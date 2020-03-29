@@ -1,0 +1,15 @@
+E:/modeltech64_10.7/alu/alu.v {1 {vlog -work work -vopt -stats=none E:/modeltech64_10.7/alu/alu.v
+Model Technology ModelSim SE-64 vlog 10.7 Compiler 2017.12 Dec  7 2017
+-- Compiling module alu
+
+Top level modules:
+	alu
+
+} {} {}} E:/modeltech64_10.7/alu/alu_test.v {1 {vlog -work work -vopt -stats=none E:/modeltech64_10.7/alu/alu_test.v
+Model Technology ModelSim SE-64 vlog 10.7 Compiler 2017.12 Dec  7 2017
+-- Compiling module alu_test
+
+Top level modules:
+	alu_test
+
+} {} {}}
