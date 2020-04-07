@@ -12,7 +12,6 @@ input        rst_ ;
  
 wire [7:0] n1, n2 ; 
  
-// ???? dffr
 mux mux7
 (.out(n1[7]),
 .sel(load),
