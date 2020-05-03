@@ -202,6 +202,19 @@ endmodule
 ```
 ## 4. 地址多路选择器
 指令执行的情况有两种，需要进行选择。故设计一个二选一开关。
+```
+module scale_mux (out, sel, b, a);
+parameter size = 8;
+output [size-1:0] out;
+input [size-1:0] b, a;
+input sel;
+ assign out = (!sel) ? a : 
+ (sel) ? b :
+ {size{1'bx}} ;
+endmodule
+
+```
+
 ## 5. 算术逻辑单元 
 根据指令的操作码opcode来判断下一步执行什么操作。对数据data和accum（累加器中数据）进行逻辑运算。
 
@@ -248,7 +261,136 @@ endmodule
 ## 6. 累加器
 寄存器.
 暂时存放ALU的一个操作或者运算结果,比如ADD是 accum=accum+data。
+```
+/******************
+* 8-bit REGISTER *
+******************/
+`timescale 1 ns / 1 ns
+module register ( out, data, load, clk, rst_ ) ;
+output [7:0] out ;
+input [7:0] data ;
+input load ;
+input clk ;
+input rst_ ;
+wire [7:0] n1, n2 ;
+//???? dffr ? mux ??????
 
+ dffr d0
+(
+.q (out[0]),
+.clk (clk),
+.rst_(rst_),
+.d (n1[0])
+);
+ dffr d1
+(
+.q (out[1]),
+.clk (clk),
+.rst_(rst_),
+.d (n1[1])
+);
+ dffr d2
+(
+.q (out[2]),
+.clk (clk),
+.rst_(rst_),
+.d (n1[2])
+);
+ dffr d3
+(
+.q (out[3]),
+.clk (clk),
+.rst_(rst_),
+.d (n1[3])
+);
+ dffr d4
+(
+.q (out[4]),
+.clk (clk),
+.rst_(rst_),
+.d (n1[4])
+);
+ dffr d5
+(
+.q (out[5]),
+.clk (clk),
+.rst_(rst_),
+.d (n1[5])
+);
+ dffr d6
+(
+.q (out[6]),
+.clk (clk),
+.rst_(rst_),
+.d (n1[6])
+);
+ dffr d7
+(
+.q (out[7]),
+.clk (clk),
+.rst_(rst_),
+.d (n1[7])
+);
+ mux m0
+(
+.a (out[0]),
+.b (data[0]),
+.sel (load),
+.out (n1[0])
+);
+ mux m1
+(
+.a (out[1]),
+.b (data[1]),
+.sel (load),
+.out (n1[1])
+);
+ mux m2
+(
+.a (out[2]),
+.b (data[2]),
+.sel (load),
+.out (n1[2])
+);
+ mux m3
+(
+.a (out[3]),
+.b (data[3]),
+.sel (load),
+.out (n1[3])
+);
+ mux m4
+(
+.a (out[4]),
+.b (data[4]),
+.sel (load),
+.out (n1[4])
+);
+ mux m5
+(
+.a (out[5]),
+.b (data[5]),
+.sel (load),
+.out (n1[5])
+);
+ mux m6
+(
+.a (out[6]),
+.b (data[6]),
+.sel (load),
+.out (n1[6])
+);
+ mux m7
+(
+.a (out[7]),
+.b (data[7]),
+.sel (load),
+.out (n1[7])
+);
+
+
+endmodule
+```
 ## 7.状态控制器
 
 ![image text](https://github.com/1Allison/img-folder/raw/master/image-20200407162138106.png)
@@ -257,17 +399,134 @@ endmodule
 
 它在8个周期内完成指令的获取和执行。前四个时钟周期为从存储器中取数据，后四个周期用来发出不同的控制信号。
 
-**读取数据**：
-第一个时钟周期：sel=1,存储器此时收到了一个mux给的地址pc_addr.
-第二个时钟周期：sel=1,rd=1,存储器read=1，按照pc_addr的地址从存储器中读出数据到数据总线data上。
+**读取数据**
+
+第一个时钟周期：
+sel=1,存储器此时收到了一个mux给的地址pc_addr。
+
+第二个时钟周期：
+sel=1,rd=1,存储器read=1，按照pc_addr的地址从存储器中读出数据到数据总线data上
+
 第三个时钟周期与第四个时钟周期相同（由于8位RISC_CPU读指令需要两个时钟周期）：sel=1,rd=1,id_ir=1,指令寄存器开始工作，读取data数据。data为8位数据，前3位是操作数，后五位是地址。
 
 **处理数据**
-第五个时钟周期：inc_pc=1,时钟信号。计数器开始工作，
-第六个时钟周期：rd=aluop(一种控制信号)，执行ADD,AND,XOR,LDA时，aluop=1,read为1，需要从存储器中读取数据；当执行HLT、 SKZ、STO、JMP时，aluop=0,不需要从存储器中读数据。
-第七个时钟周期：
-1. 算术逻辑
-2. 由于SKR操作是 skip if zero true,故需要判断ALU的zero标志是否为1，若zero为1，跳转到下一个语句。
-3. JMP=1,PC地址为目标地址
 
-第八个时钟周期
+第五个时钟周期：
+inc_pc=1,时钟信号。计数器开始工作。
+
+第六个时钟周期：
+rd=aluop(一种控制信号)，执行ADD,AND,XOR,LDA时，aluop=1,read为1，需要从存储器中读取数据；当执行HLT、 SKZ、STO、JMP时，aluop=0,不需要从存储器中读数据。
+
+第七个时钟周期：
+1. 若aluop=1,算术逻辑
+2. 若SKZ&zero=1， 由于SKR操作是 skip if zero true,故需要判断ALU的zero标志是否为1，若zero为1，跳转到下一个语句。
+3. 若JMP=1,PC地址为目标地址
+
+第八个时钟周期：
+1. 若aluop=1,则rd=1，data_e=0,ld_ac=1,执行LDA指令，把数据写入累加器中。
+2. 若操作为SKZ,PC地址自增1。
+3. 若操作为JMP,PC地址变成目标地址。
+4. 若操作是STO,则将累加器中的数据写到地址中。
+
+## 8.cpu集成设计
+设计顶层模块将cpu的各个模块功能进行实例化。
+```
+/*******
+ * CPU *
+ *******/
+`timescale 1 ns/1 ns
+module cpu(rst_);
+
+input rst_;
+wire [7:0] data;
+wire [7:0] alu_out;
+wire [7:0] ir_out;
+wire [7:0] ac_out;
+wire [4:0] pc_addr;
+wire [4:0] ir_addr;
+wire [4:0] addr;
+wire [2:0] opcode;
+
+assign opcode=ir_out[7:5];
+assign ir_addr=ir_out[4:0];
+
+control ctl1
+(
+.rd(rd),
+.wr(wr),
+.ld_ir(ld_ir),
+.ld_ac(ld_ac),
+.ld_pc(ld_pc),
+.inc_pc(inc_pc),
+.halt(halt),
+.data_e(data_e),
+.sel(sel),
+.opcode(opcode),
+.zero(zero),
+.clk(clock),
+.rst_(rst_)
+);
+
+alu alu1
+(
+.out(alu_out),
+.zero(zero),
+.opcode(opcode),
+.data(data),
+.accum(ac_out)
+);
+
+register ac
+(
+.out(ac_out),
+.data(alu_out),
+.load(ld_ac),
+.clk(clock),
+.rst_(rst_)
+);
+
+register ir
+(
+.out(ir_out),
+.data(data),
+.load(ld_ir),
+.clk(clock),
+.rst_(rst_)
+);
+
+scale_mux #5 smx
+(
+.out(addr),
+.sel(sel),
+.b(pc_addr),
+.a(ir_addr)
+);
+
+mem mem1
+(
+.data(data),
+.addr(addr),
+.read(rd),
+.write(wr)
+);
+
+counter pc
+(
+.cnt(pc_addr),
+.data(ir_addr),
+.load(ld_pc),
+.clk(inc_pc),
+.rst_(rst_)
+);
+
+clkgen clk
+(
+.clk(clock)
+);
+
+assign data=(data_e)?alu_out:8'bz;
+endmodule
+
+```
+
+
